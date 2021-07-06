@@ -1,7 +1,7 @@
 {
-  "name": "zipkin-transport-http",
-  "version": "0.22.0",
-  "description": "Transports Zipkin trace data via HTTP",
+  "name": "zipkin-transport-newrelic",
+  "version": "0.1.0",
+  "description": "Transports Zipkin trace data via HTTP to New Relic's Trace endpoint",
   "main": "lib/index.js",
   "types": "index.d.ts",
   "scripts": {
@@ -12,7 +12,10 @@
   },
   "author": "Openzipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
-  "repository": "https://github.com/openzipkin/zipkin-js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rudouglas/zipkin-transport-newrelic.git"
+  },
   "dependencies": {
     "zipkin": "^0.22.0"
   },
@@ -24,5 +27,12 @@
     "fetch-retry": "3.1.0",
     "noop-logger": "^0.1.1"
   },
-  "gitHead": "bc590b2957b4c1e0c434de3c6fb7b4feeb406f8b"
+  "bugs": {
+    "url": "https://github.com/rudouglas/zipkin-transport-newrelic/issues"
+  },
+  "homepage": "https://github.com/rudouglas/zipkin-transport-newrelic#readme",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  }
 }
