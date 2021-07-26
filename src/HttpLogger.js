@@ -144,7 +144,7 @@ var HttpLogger = /*#__PURE__*/function (_EventEmitter) {
 
         if (this._getPayloadSize(encodedSpan) > this.maxPayloadSize) {
           // Payload size is too large even with an empty queue, we can only drop
-          var err = 'Zipkin span got dropped, reason: payload too large';
+          var err = 'gatsby-plugin-newrelic: Span got dropped, reason: payload too large';
           if (this.errorListenerSet) this.emit('error', new Error(err));else this.log.error(err);
           return;
         }
@@ -193,6 +193,7 @@ var HttpLogger = /*#__PURE__*/function (_EventEmitter) {
           for (let tag in tags) {
             formatTrace.tags[tag] = tags[tag]
           }
+          formatTrace.tags.sessionId = constants.sessionId;
           return JSON.stringify({...formatTrace,...constants.traces.tags})
         })
         
@@ -207,13 +208,13 @@ var HttpLogger = /*#__PURE__*/function (_EventEmitter) {
         };
         fetchImpl(self.endpoint, fetchOptions).then(function (response) {
           if (response.status !== 202 && response.status !== 200) {
-            var err = 'Unexpected response while sending Zipkin data, status:' + "".concat(response.status, ", body: ").concat(postBody);
+            var err = 'gatsby-plugin-newrelic: Unexpected response while sending trace data, status:' + "".concat(response.status, ", body: ").concat(postBody);
             if (self.errorListenerSet) _this2.emit('error', new Error(err));else _this2.log.error(err);
           } else {
             _this2.emit('success', response);
           }
         })["catch"](function (error) {
-          var err = "Error sending Zipkin data ".concat(error);
+          var err = "gatsby-plugin-newrelic: Error sending trace data ".concat(error);
           if (self.errorListenerSet) _this2.emit('error', new Error(err));else _this2.log.error(err);
         });
         self.queue.length = 0;
