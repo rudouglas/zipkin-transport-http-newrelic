@@ -301,73 +301,71 @@ var HttpLogger = /*#__PURE__*/ (function (_EventEmitter) {
         var self = this;
 
         const { tags, options } = self.headers;
-        if (!options.NR_INGEST_KEY || !options.traces.collectTraces) {
+        const { 
+          NR_INGEST_KEY, 
+          traces: {collectTraces} = {collectTraces: true} 
+        } = options;
+        if (!NR_INGEST_KEY || !collectTraces || self.queue.length <= 0) {
           return;
         }
-        if (self.queue.length > 0 && options.NR_INGEST_KEY && options.traces.collectTraces) {
-          const formattedQueue = self.queue.map((trace) => {
-            const formatTrace = JSON.parse(trace);
-
-            formatTrace.localEndpoint = {};
-            formatTrace.localEndpoint.serviceName = options.SITE_NAME;
-            if(!formatTrace.tags) {
-              formatTrace.tags = {};
+        const formattedQueue = self.queue.map((trace) => {
+          const { SITE_NAME, buildId } = options;
+          trace = JSON.parse(trace);
+          trace.localEndpoint = {};
+          trace.localEndpoint.serviceName = SITE_NAME;
+          if(!trace.tags) {
+            trace.tags = {};
+          }
+          if (trace.annotations) {
+            for (let anno of trace.annotations) {
+              trace.tags[anno.key] = anno.value;
             }
-            if (formatTrace.annotations) {
-              for (let anno of formatTrace.annotations) {
-                formatTrace.tags[anno.key] = anno.value;
-              }
-              delete formatTrace["annotations"];
+          }
+          if (trace.binaryAnnotations) {
+            for (let anno of trace.binaryAnnotations) {
+              trace.tags[anno.key] = anno.value;
             }
-            if (formatTrace.binaryAnnotations) {
-              for (let anno of formatTrace.binaryAnnotations) {
-                formatTrace.tags[anno.key] = anno.value;
-              }
-              delete formatTrace["binaryAnnotations"];
-            }
-            if (formatTrace.name === "run-api") {
-              formatTrace.name += `: ${formatTrace.tags.api}`;
-            }
-            if (formatTrace.name === "run-plugin") {
-              formatTrace.name += `: ${formatTrace.tags.plugin}`;
-            }
-            for (let tag in tags) {
-              formatTrace.tags[tag] = tags[tag];
-            }
-            formatTrace.tags.buildId = options.buildId;
-            return JSON.stringify({ ...formatTrace, ...options.traces.tags });
-          });
-          const postBody = `[${formattedQueue.join(",")}]`;
-          var fetchOptions = {
-            method: "POST",
-            body: postBody,
-            headers: self.headers,
-            timeout: self.timeout,
-            agent: self.agent,
-          };
-          fetchImpl(self.endpoint, fetchOptions)
-            .then(function (response) {
-              if (response.status !== 202 && response.status !== 200) {
-                var err =
-                  "[@] gatsby-plugin-newrelic: Unexpected response while sending trace data, status:" +
-                  "".concat(response.status, ", body: ").concat(postBody);
-                if (self.errorListenerSet) _this2.emit("error", new Error(err));
-                else _this2.log.error(err);
-              } else {
-                _this2.emit("success", response);
-              }
-            })
-            ["catch"](function (error) {
+          }
+          if (trace.name === "run-api") {
+            trace.name += `: ${trace.tags.api}`;
+          }
+          if (trace.name === "run-plugin") {
+            trace.name += `: ${trace.tags.plugin}`;
+          }
+          trace.tags = {...trace.tags, ...tags};
+          trace.tags.buildId = buildId;
+          return JSON.stringify({ ...trace });
+        });
+        const postBody = `[${formattedQueue.join(",")}]`;
+        var fetchOptions = {
+          method: "POST",
+          body: postBody,
+          headers: self.headers,
+          timeout: self.timeout,
+          agent: self.agent,
+        };
+        fetchImpl(self.endpoint, fetchOptions)
+          .then(function (response) {
+            if (response.status >= 300) {
               var err =
-                "[@] gatsby-plugin-newrelic: Error sending trace data ".concat(
-                  error
-                );
+                "[@] gatsby-plugin-newrelic: Unexpected response while sending trace data, status:" +
+                "".concat(response.status, ", body: ").concat(postBody);
               if (self.errorListenerSet) _this2.emit("error", new Error(err));
               else _this2.log.error(err);
-            });
-          self.queue.length = 0;
-          self.queueBytes = 0;
-        }
+            } else {
+              _this2.emit("success", response);
+            }
+          })
+          ["catch"](function (error) {
+            var err =
+              "[@] gatsby-plugin-newrelic: Error sending trace data ".concat(
+                error
+              );
+            if (self.errorListenerSet) _this2.emit("error", new Error(err));
+            else _this2.log.error(err);
+          });
+        self.queue.length = 0;
+        self.queueBytes = 0;
       },
     },
   ]);
