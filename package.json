@@ -1,6 +1,6 @@
 {
   "name": "zipkin-transport-newrelic",
-  "version": "0.1.23",
+  "version": "0.1.26",
   "description": "Transports Zipkin trace data via HTTP to New Relic's Trace endpoint",
   "main": "lib/index.js",
   "types": "index.d.ts",
