@@ -106,7 +106,7 @@ class HttpLogger extends EventEmitter {
       const { tags, options } = self.headers;
       const { 
         NR_INGEST_KEY, 
-        traces: {collectTraces} = {collectTraces: true} 
+        collectTraces = true, 
       } = options;
       if (!NR_INGEST_KEY || !collectTraces || self.queue.length <= 0) {
         return;
